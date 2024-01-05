@@ -90,9 +90,8 @@ class TypeDefinition {
 
   bool get isPrimitiveList => _isPrimitive && name == 'List';
 
-  String _buildParseClass(String expression) {
-    final properType = subtype != null ? subtype : name;
-    return ' $properType.fromJson($expression)';
+  String get propertyType {
+    return subtype != null ? subtype! : name;
   }
 
   String _buildToJsonClass(String expression, [bool nullGuard = true]) {
@@ -102,25 +101,43 @@ class TypeDefinition {
     return '$expression.toJson()';
   }
 
+  String primitiveParseFunction({
+    bool fromSubType = false,
+  }) {
+    switch (fromSubType ? subtype : name) {
+      case "int":
+        return "parseToInt";
+      case "double":
+        return "parseToDouble";
+      case "bool":
+        return "parseToBool";
+      case "String":
+        return "parseToString";
+      case "DateTime":
+        return "parseToDateTime";
+      default:
+        return "parseToString";
+    }
+  }
+
   String jsonParseExpression(String key, bool privateField) {
     final jsonKey = "json['$key']";
-    final fieldKey =
-        fixFieldName(key, typeDef: this, privateField: privateField);
+    final fieldKey = fixFieldName(
+      key,
+      typeDef: this,
+      privateField: privateField,
+    );
     if (isPrimitive) {
       if (name == "List") {
-        return "$fieldKey = json['$key'].cast<$subtype>();";
+        return "$fieldKey = parseToListOfField<$subtype>(\n\t\t\t$jsonKey,\n\t\t\t${primitiveParseFunction(fromSubType: true)},\n\t\t);";
       }
-      return "$fieldKey = json['$key'];";
-    } else if (name == "List" && subtype == "DateTime") {
-      return "$fieldKey = json['$key'].map((v) => DateTime.tryParse(v));";
-    } else if (name == "DateTime") {
-      return "$fieldKey = DateTime.tryParse(json['$key']);";
+      return "$fieldKey = ${primitiveParseFunction()}($jsonKey);";
     } else if (name == 'List') {
       // list of class
-      return "if (json['$key'] != null) {\n\t\t\t$fieldKey = <$subtype>[];\n\t\t\tjson['$key'].forEach((v) { $fieldKey!.add( $subtype.fromJson(v)); });\n\t\t}";
+      return "$fieldKey = parseToList<$propertyType>(\n\t\t\t$jsonKey,\n\t\t\t$propertyType.fromJson,\n\t\t);";
     } else {
       // class
-      return "$fieldKey = json['$key'] != null ? ${_buildParseClass(jsonKey)} : null;";
+      return "$fieldKey = parseToObject<$propertyType>(\n\t\t\t$jsonKey,\n\t\t\t$propertyType.fromJson,\n\t\t);";
     }
   }
 
@@ -290,6 +307,8 @@ class ClassDefinition {
       sb.write('this.$fieldName');
       if (i != len) {
         sb.write(', ');
+      } else {
+        sb.write(',\n\t\t');
       }
       i++;
     });

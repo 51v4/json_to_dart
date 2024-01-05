@@ -1,5 +1,6 @@
 import 'dart:convert' as Convert;
 import 'dart:math';
+
 import 'package:json_ast/json_ast.dart'
     show Node, ObjectNode, ArrayNode, LiteralNode, PropertyNode;
 import 'package:json_to_dart/syntax.dart';
@@ -9,8 +10,8 @@ const Map<String, bool> PRIMITIVE_TYPES = const {
   'double': true,
   'String': true,
   'bool': true,
-  'DateTime': false,
-  'List<DateTime>': false,
+  'DateTime': true,
+  'List<DateTime>': true,
   'List<int>': true,
   'List<double>': true,
   'List<String>': true,
