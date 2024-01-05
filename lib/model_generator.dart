@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:dart_style/dart_style.dart';
 import 'package:json_ast/json_ast.dart' show parse, Settings, Node;
+
 import 'package:json_to_dart/helpers.dart';
 import 'package:json_to_dart/syntax.dart';
 
@@ -41,6 +42,7 @@ class ModelGenerator {
     if (hint.path == "") {
       return null;
     }
+    return hint;
   }
 
   List<Warning> _generateClassDefinition(String className,
